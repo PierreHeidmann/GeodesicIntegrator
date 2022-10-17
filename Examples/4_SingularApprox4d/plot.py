@@ -54,15 +54,19 @@ while(os.path.isfile(filename)):
 # ===============================
 # Defs 
 # ===============================
-
+M = 1;
 mass = 1; 
 theta = np.linspace(0,2*np.pi,100);
 x_horizon = 2*mass*np.sin(theta)
 y_horizon = 2*mass*np.cos(theta) 
-x_ISCO = 6*mass*np.sin(theta)
-y_ISCO = 6*mass*np.cos(theta)
-x_Photon = 3*mass*np.sin(theta)
-y_Photon = 3*mass*np.cos(theta)
+# x_ISCO = 6*mass*np.sin(theta)
+# y_ISCO = 6*mass*np.cos(theta)
+x_Photon = 2.8*np.sin(theta)
+y_Photon = 2.8*np.cos(theta)
+
+x_TS = 4.0* M / 3.0 *np.sin(theta)
+y_TS = 4.0* M / 3.0 *np.cos(theta)
+
 
 # ================= Plotting ========================
 
@@ -72,15 +76,17 @@ cmap = plt.get_cmap('autumn')
 colors = [cmap(i) for i in np.linspace(1, 0, N1)]
 
 plt.figure(figsize=(14, 14), dpi=200)
-plt.plot(x_horizon,y_horizon,label = 'horizon',color = 'black')
-# plt.plot(x_ISCO,y_ISCO,label = 'ISCO')
+# plt.plot(x_horizon,y_horizon,label = 'horizon equivalent Schwarzschild',color = 'black')
+plt.plot(x_TS,y_TS,label = 'Star surface',color = 'Blue')
+# plt.plot(x_ISCO,y_ISCO,label = 'ISCO Schwarzschild')
 plt.plot(x_Photon,y_Photon,label = 'Photon Sphere')
+# plt.plot(x_PhotonTS,y_PhotonTS,label = 'Photon Sphere')
 ind = 0 
 for pos in data:
     plt.plot(pos[0],pos[1],color = colors[ind])
     ind += 1 
 plt.xlabel(r'$x~[M^{-1}]$')
-plt.ylabel(r'$y~[M^{-1}]$')
+plt.ylabel(r'$z~[M^{-1}]$')
 plt.xlim([-30,30])
 plt.ylim([-30,30])
 plt.legend()

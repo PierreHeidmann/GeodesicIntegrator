@@ -1,25 +1,66 @@
-#include "isometric.hpp"
+#include "TopologicalStar.hpp"
 
-tensor<2, double> Black_Hole_isometric::get_metric(double M, double x, double y,
-                                                   double z)
+tensor<2, double> Topological_Star::get_metric(double rb, double rs, double x, double y, double z, double t)
 {
 
+    tensor<2, double> jacobian;
     tensor<2, double> g;
-    double r = sqrt(x * x + y * y + z * z);
-    const double psi = 1.0 + M / (2.0 * r);
-    FOR2(i, j) g[i][j] = 0;
-    for (int i = 0; i < 3; i++)
-        g[i][i] = psi * psi * psi * psi;
+    tensor<2, double> g_spher;
 
-    const double alpha = (1.0 - M / (2. * r)) / (1.0 + M / (2. * r));
+    FOR2(i, j)
+    {
+        g[i][j] = 0;
+        g_spher[i][j] = 0;
+        jacobian[i][j] = 0;
+    }
 
-    g[3][3] = -alpha * alpha;
+    double rr2 = pow(x, 2) + pow(y, 2) + pow(z, 2);
+    double rho2 = pow(x, 2) + pow(y, 2);
+
+    double rr = sqrt(rr2);
+    double rho = sqrt(rho2);
+    // sinus(theta)
+    double sintheta = rho / rr;
+    double costheta = z / rr;
+    // cos(phi)
+    double cosphi = x / rho;
+    // sin(phi)
+    double sinphi = y / rho;
+
+    g_spher[0][0] = 1. / (sqrt(1.0 - rb / rr) * (1.0 - rs / rr));
+    // Define theta theta component
+    g_spher[1][1] = sqrt(1.0 - rb / rr) * rr2;
+    // Define phi phi component
+    g_spher[2][2] = sqrt(1.0 - rb / rr) * rr2 * pow(sintheta, 2);
+    // Define tt component
+    g_spher[3][3] = -sqrt(1.0 - rb / rr) * (1. - rs / rr);
+
+    jacobian[0][0] = x / rr;
+    jacobian[1][0] = cosphi * z / rr2;
+    jacobian[2][0] = -y / rho2;
+    jacobian[0][1] = y / rr;
+    jacobian[1][1] = sinphi * z / rr2;
+    jacobian[2][1] = x / rho2;
+    jacobian[0][2] = z / rr;
+    jacobian[1][2] = -rho / rr2;
+    jacobian[2][2] = 0.0;
+    jacobian[3][3] = 1.0;
+
+    // ====================
+
+    FOR2(i, j)
+    {
+        FOR2(k, l)
+        {
+            g[i][j] += g_spher[k][l] * jacobian[k][i] * jacobian[l][j];
+        }
+    }
 
     return g;
 }
 
-tensor<3, double> Black_Hole_isometric::get_metric_deriv(double M, double x,
-                                                         double y, double z)
+tensor<3, double> Topological_Star::get_metric_deriv(double rb, double rs, double x, double y,
+                                               double z, double t )
 {
 
     tensor<3, double> dg;
@@ -29,27 +70,29 @@ tensor<3, double> Black_Hole_isometric::get_metric_deriv(double M, double x,
     tensor<2, double> g_dz;
     double h = 1e-8;
 
-    g = get_metric(M, x, y, z);
-    g_dx = get_metric(M, x - h, y, z);
-    g_dy = get_metric(M, x, y - h, z);
-    g_dz = get_metric(M, x, y, z - h);
+    g = get_metric(rb, rs, x, y, z, t);
+    g_dx = get_metric(rb, rs, x - h, y, z, t);
+    g_dy = get_metric(rb, rs, x, y - h, z, t);
+    g_dz = get_metric(rb, rs, x, y, z - h, t);
 
     FOR2(i, j)
     {
         dg[i][j][0] = (g[i][j] - g_dx[i][j]) / h;
         dg[i][j][1] = (g[i][j] - g_dy[i][j]) / h;
         dg[i][j][2] = (g[i][j] - g_dz[i][j]) / h;
+        // Metric is static
         dg[i][j][3] = 0;
     }
     return dg;
 }
 
 
-int Black_Hole_isometric::eval_diff_eqn(double t, const double y[], double f[],
-                                        void *params)
+int Topological_Star::eval_diff_eqn(double t, const double y[], double f[],
+                              void *params)
 {
 
-    double M = 1;
+    double rb = 2;
+    double rs = 1.9;
     tensor<2, double> g; // Metix Index low low
     tensor<2, double> g_UU;
     tensor<3, double> dg;        //
@@ -99,11 +142,11 @@ int Black_Hole_isometric::eval_diff_eqn(double t, const double y[], double f[],
     */
     // ====================
 
-    g = get_metric(M, v.x, v.y, v.z);
+    g = get_metric(rb, rs, v.x, v.y, v.z, v.t);
 
     g_UU = TensorAlgebra::compute_inverse(g);
 
-    dg = get_metric_deriv(M, v.x, v.y, v.z);
+    dg = get_metric_deriv(rb, rs, v.x, v.y, v.z, v.t);
 
     //=========================
 

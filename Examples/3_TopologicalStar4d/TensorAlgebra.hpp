@@ -6,8 +6,7 @@
 namespace TensorAlgebra
 {
 
-inline tensor<3, double> get_chris(const tensor<2, double> g_UU,
-                                   const tensor<3, double> dg)
+inline tensor<3, double> get_chris(const tensor<2, double> g_UU, const tensor<3, double> dg)
 {
 
     // Init
@@ -25,39 +24,6 @@ inline tensor<3, double> get_chris(const tensor<2, double> g_UU,
         chris_LLL[i][j][k] = 0.5 * (dg[j][i][k] + dg[k][i][j] - dg[j][k][i]);
     }
     FOR3(i, j, k)
-    {
-        chris_ULL[i][j][k] = 0;
-        FOR1(l) { chris_ULL[i][j][k] += g_UU[i][l] * chris_LLL[l][j][k]; }
-    }
-
-    return chris_ULL;
-}
-template <int dim>  
-inline tensor<3, double,dim> get_chris(const tensor<2, double,dim> g_UU,
-                                   const tensor<3, double,dim> dg)
-{
-
-    // Init
-    tensor<3, double,dim> chris_LLL; // Christoffel index low low low
-    tensor<3, double,dim> chris_ULL; // Christoffel index high low low
-
-    for (int i = 0; i < dim; i++)
-        for (int j = 0; j < dim; j++)
-            for (int k = 0; k < dim; k++)
-    {
-        chris_LLL[i][j][k] = 0;
-        chris_ULL[i][j][k] = 0;
-    }
-    // Calculation of Christoffel symbols
-    for (int i = 0; i < dim; i++)
-        for (int j = 0; j < dim; j++)
-            for (int k = 0; k < dim; k++)
-    {
-        chris_LLL[i][j][k] = 0.5 * (dg[j][i][k] + dg[k][i][j] - dg[j][k][i]);
-    }
-    for (int i = 0; i < dim; i++)
-        for (int j = 0; j < dim; j++)
-            for (int k = 0; k < dim; k++)
     {
         chris_ULL[i][j][k] = 0;
         FOR1(l) { chris_ULL[i][j][k] += g_UU[i][l] * chris_LLL[l][j][k]; }
@@ -157,19 +123,7 @@ inline tensor<2, data_t> compute_inverse(const tensor<2, data_t, 4> &matrix)
     return h_UU;
 }
 
-inline double calculate_norm(const double vx, const double vy, const double vz,
-                             double vt, const tensor<2, double> g)
-{
-    double norm = 0;
-    tensor<1, double> dx = {vx, vy, vz, vt};
-
-    FOR2(i, j) { norm += g[i][j] * dx[i] * dx[j]; }
-    return norm;
-}
-
-template<int dim>
-inline double calculate_norm(const double vx, const double vy, const double vz,
-                             double vt, const tensor<2, double,dim> g)
+inline double calculate_norm( const double vx, const  double vy, const  double vz,double vt, const tensor<2,double> g)
 {
     double norm = 0;
     tensor<1, double> dx = {vx, vy, vz, vt};
@@ -179,21 +133,18 @@ inline double calculate_norm(const double vx, const double vy, const double vz,
 }
 
 // Change the vt component to set norm to any value
-template <class data_t>
-inline Vec3 set_norm(Vec3 v, const double norm_val)
+template<class data_t>
+inline Vec3 set_norm(Vec3 v, const double norm_val, const double rb=2, const double rs=1.9)
 {
-double rb = 2.2;
-double rs = 0*2.0;
     data_t metric;
     tensor<1, double> dx = {v.vx, v.vy, v.vz, v.vt};
-    auto g = metric.get_metric(rb,rs, v.x, v.y, v.z, v.t);
-    double norm = calculate_norm(v.vx, v.vy, v.vz, v.vt, g);
-    int spacedim = 3;
+    tensor<2, double> g = metric.get_metric(rb, rs, v.x, v.y, v.z, v.t);
+    double norm = calculate_norm(v.vx,v.vy,v.vz,v.vt,g);
 
     double b = 0;
     for (int i = 0; i < 3; i++)
     {
-        b += g[i][spacedim] * dx[i] + g[spacedim][i] * dx[i];
+        b += g[i][3] * dx[i] + g[3][i] * dx[i];
     }
 
     double discriminant = b * b;
@@ -201,11 +152,11 @@ double rs = 0*2.0;
     {
         for (int j = 0; j < 3; j++)
         {
-            discriminant += -(4 * g[spacedim][spacedim] * g[i][j] * dx[i] * dx[j]);
+            discriminant += -(4 * g[3][3] * g[i][j] * dx[i] * dx[j]);
         }
     }
-std::cout << discriminant << std::endl;
-    v.vt = (-b - sqrt(discriminant)) / (2.0 * g[spacedim][spacedim]);
+
+    v.vt = (-b - sqrt(discriminant)) / (2.0 * g[3][3]);
 
     return v;
 }

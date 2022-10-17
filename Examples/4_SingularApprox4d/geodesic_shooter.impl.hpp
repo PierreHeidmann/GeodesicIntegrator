@@ -10,12 +10,15 @@ void geodesic_shooter<data_t>::shoot(Vec3 center, double shift,
                                      int numberofgeodesics,
                                      bool set_geodesic_null,
                                      const double time_end,
-                                     const double time_start, const double dt,
-                                     const double epsabs, const double epsrel,
-                                     const double hstart, const int nmax)
+                                     const double time_start, const double dt)
 {
     data_t metric;
     gsl_odeiv2_system sys = {metric.eval_diff_eqn, nullptr, 8};
+
+    const double epsabs = 1e-10;
+    const double epsrel = 1e-10;
+    const double hstart = 1e-10;
+    const int nmax = 1000000;
 
     for (int i = 0; i < numberofgeodesics; i++)
     {
@@ -32,6 +35,7 @@ void geodesic_shooter<data_t>::shoot(Vec3 center, double shift,
 
         single_shot(y, i, time_end, time_start, dt, epsabs, epsrel, hstart,
                     nmax);
+
     }
 };
 
@@ -44,8 +48,7 @@ void geodesic_shooter<data_t>::single_shot(double y[], const int index,
                                            const double hstart, const int nmax)
 {
     data_t metric;
-    const int dimension_system = 8;
-    gsl_odeiv2_system sys = {metric.eval_diff_eqn, nullptr, dimension_system};
+    gsl_odeiv2_system sys = {metric.eval_diff_eqn, nullptr, 8};
 
     double t = time_start;
 
@@ -59,16 +62,13 @@ void geodesic_shooter<data_t>::single_shot(double y[], const int index,
     int status = 0;
 
     // ========== Integration and output ===
-    double rb = 2.2;
-    double rs = 0*2.0;
     while (t <= time_end && status == 0)
     {
-        auto g = metric.get_metric(rb,rs,y[0], y[1], y[2], y[3]);
-        const auto norm =
-            TensorAlgebra::calculate_norm(y[4], y[5], y[6], y[7], g);
-        myfile << y[0] << "       " << y[1] << "   " << y[2] << "   " << y[3]
-               << "   " << y[4] << "       " << y[5] << "   " << y[6] << "   "
-               << y[7] << "   " << norm << "\n";
+        tensor<2,double> g = metric.get_metric(2,1.9,y[0],y[1],y[2],y[3]);
+        const auto norm = TensorAlgebra::calculate_norm(y[4],y[5],y[6],y[7],g);
+        myfile << y[0] << "       " << y[1] << "   " << y[2] << "   " << y[3] << "   "
+               << y[4] << "       " << y[5] << "   " << y[6] << "   " << y[7]
+               << "   " << norm << "\n";
 
         status = ODE_Solver(sys, y, t, t + dt, hstart, epsabs, epsrel, nmax);
         t += dt;

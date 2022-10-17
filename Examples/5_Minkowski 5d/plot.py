@@ -73,7 +73,7 @@ colors = [cmap(i) for i in np.linspace(1, 0, N1)]
 
 plt.figure(figsize=(14, 14), dpi=200)
 plt.plot(x_horizon,y_horizon,label = 'horizon',color = 'black')
-# plt.plot(x_ISCO,y_ISCO,label = 'ISCO')
+plt.plot(x_ISCO,y_ISCO,label = 'ISCO')
 plt.plot(x_Photon,y_Photon,label = 'Photon Sphere')
 ind = 0 
 for pos in data:

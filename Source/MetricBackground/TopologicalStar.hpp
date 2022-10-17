@@ -1,5 +1,5 @@
-#ifndef SCHWARZSCHILD_HPP
-#define SCHWARZSCHILD_HPP
+#ifndef TOPOLOGICALSTAR_HPP
+#define TOPOLOGICALSTAR_HPP
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
@@ -12,19 +12,19 @@
 
 using namespace std;
 
-class Black_Hole
+class Topological_Star
 {
 
   public:
-    const int dim = 4;
+    static tensor<2, double> get_metric(double rb, double rs, double x, double y, double z,double t);
 
-    static tensor<2, double> get_metric(double x, double y, double z, double t);
+    static tensor<3, double> get_metric_deriv(double rb, double rs, double x, double y,
+                                              double z, double t);
 
-    static tensor<3, double> get_metric_deriv(double x, double y, double z,
-                                              double t);
 
     static int eval_diff_eqn(double t, const double y[], double f[],
                              void *params);
+
 };
 
 #endif
